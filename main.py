@@ -24,34 +24,17 @@ logger.addHandler(file_handler)
 #NOTE: Collections are ethermerals, KitPics, etherphrocks
 c_list = ["0xeE8C0131aa6B66A2CE3cad6D2A039c1473a79a6d", "0xB1bb22c3101E7653d0d969F42F831BD9aCCc38a5", "0x23FC142A6bA57a37855D9D52702fDA2EC4B4Fd53"]
 
-# Set pandas display options
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.float_format', lambda x: '%.3f' % x)
-pd.set_option('display.width', 2500)
-pd.set_option("max_colwidth", 100)
+#NOTE: This is just for testing and devleopment purposes right now...
 
 if __name__ == '__main__':
     source: typing.List[OpenSeaCollection] = []
     for n, c in enumerate(c_list):
         os_collection = OpenSeaCollection(c)
         os_collection.get_assets()
-        print(f'Number of assets: {len(os_collection.assets)}')
-        for a in os_collection.assets:
-            print(f'THE ASSET: {a}')
+        os_collection.calculate_rarity()
         source.append(os_collection)
-        time.sleep(1) #delate between each request 
+        time.sleep(1) #delay between each request 
     
-    for n, os_collection in enumerate(source):
-        print(f'COLLECTION {n} : {os_collection.collection_string}')
-        for n, asset in enumerate(os_collection.assets):
-            print(f'\tASSET {n} : {asset.id}')
-            for n, trait in enumerate(asset.traits_list):
-                print(f'\t\tTRAIT: {trait.trait_type}')
-
-                
-
-
-
-
-    
+    for c in source:
+        for asset in c.assets:
+            print(f'{asset.id} : Rarity score: {asset.rarity_score}')

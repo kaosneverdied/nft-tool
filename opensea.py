@@ -1,9 +1,10 @@
+import itertools
 from logging import exception
 import requests
 import logging
 import typing
 import pandas as pd
-from itertools import compress
+from itertools import combinations
 
 logger = logging.getLogger()
 
@@ -15,7 +16,7 @@ class OpenSeaCollection:
         self.assets: typing.List[Asset] = []
 
     def get_assets(self):
-        url = self._assets_api+"&order_direction=desc&offset=0&limit=1"+self.collection_string+"&order_direction=desc&offset=0&limit=1"
+        url = self._assets_api+"&order_direction=desc&offset=0&limit=1"+self.collection_string+"&order_direction=desc&offset=0&limit=10"
         try:
             get_json = requests.get(url)
         except exception as e:
@@ -28,13 +29,34 @@ class OpenSeaCollection:
                 a.calculate_rarity()
                 self.assets.append(a)
     
+
+    #FIXME: this method needs some work done. 
     def calculate_rarity(self):
-        for asset in self.assets:
-            for trait in asset.traits_list:
-                #compare each trait to 
-                pass 
+        for asset_a, asset_b in itertools.combinations(self.assets, 2):
+            for trait_a in asset_a.traits_list:
+                for trait_b in asset_b.traits_list:
+                    if trait_a.trait_type == trait_b.trait_type:
+                        trait_a.trait_type_r_score += 1
+                    
+                    if trait_a.value == trait_b.value:
+                        trait_a.value_r_score += 1
+                    
+                    if trait_a.display_type == trait_b.display_type:
+                        trait_a.display_type_r_score +=1
+                    
+                    if trait_a.max_value == trait_b.max_value:
+                        trait_a.max_value_r_score +=1
+                    
+                    if trait_a.trait_count == trait_b.trait_count:
+                        trait_a._trait_count_r_score += 1
+                    
+                    if trait_a.order == trait_b.order:
+                        trait_a.order_r_score += 1
+            
+                asset_a.rarity_score += trait_a.trait_type_r_score + trait_a.value_r_score + trait_a.display_type_r_score + trait_a.max_value_r_score + trait_a._trait_count_r_score + trait_a.order_r_score
 
 
+    #TODO: Write me
     def get_events(self, events):
         pass
 
@@ -88,15 +110,25 @@ class Asset:
 
 class AssetTraits:
     def __init__(self, data) -> None:
-        self.trait_type = data['trait_type'] 
+        self.trait_type = data['trait_type']
         self.value = data['value'] 
         self.display_type = data['display_type'] 
         self.max_value = data['max_value'] 
         self.trait_count = data['trait_count'] 
         self.order = data['order']
+        
+        #use these to hold the rarity value of each trait 
+        self.trait_type_r_score = 0
+        self.value_r_score = 0
+        self.display_type_r_score = 0
+        self.max_value_r_score: int = 0
+        self._trait_count_r_score: int = 0 
+        self.order_r_score: int = 0
+
+
     
     def __str__(self) -> str:
-        print(f'trait_type: {self.trait_type}, value: {self.value}, display_type: {self.display_type}, max_value: {self.max_value}, trait_count: {self.trait_count}, order: {self.order}')
+        return (f'trait_type: {self.trait_type}, value: {self.value}, display_type: {self.display_type}, max_value: {self.max_value}, trait_count: {self.trait_count}, order: {self.order}')
 
         
 
