@@ -28,7 +28,6 @@ class OpenSeaCollection:
                 a.set_traits() 
                 a.calculate_rarity()
                 self.assets.append(a)
-    
 
     #FIXME: this method needs some work done. 
     def calculate_rarity(self):
