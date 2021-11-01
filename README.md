@@ -1,2 +1,3 @@
 # nft-tool
- an nft tool for getting info from opensea
+ An nft tool for getting info from opensea. 
+ A work in progress. 
