@@ -9,14 +9,13 @@ from itertools import combinations
 logger = logging.getLogger()
 
 class OpenSeaCollection:
-    def __init__(self, collection_string : str) -> None:
-        self._assets_api = "https://api.opensea.io/api/v1/assets?&asset_contract_address="
-        self._events_api = "https://api.opensea.io/api/v1/events?asset_contract_address="        
-        self.collection_string = collection_string
+    def __init__(self) -> None:
         self.assets: typing.List[Asset] = []
+        self._baseurl_assets = "https://api.opensea.io/api/v1/assets?"
+        self._baseurl_events = "https://api.opensea.io/api/v1/events?"
+    
 
-    def get_assets(self):
-        url = self._assets_api+"&order_direction=desc&offset=0&limit=1"+self.collection_string+"&order_direction=desc&offset=0&limit=10"
+    def _make_request(self, url):
         try:
             get_json = requests.get(url)
         except exception as e:
@@ -28,6 +27,148 @@ class OpenSeaCollection:
                 a.set_traits() 
                 a.calculate_rarity()
                 self.assets.append(a)
+    
+    
+
+    #REF: https://docs.opensea.io/reference/getting-assets
+    def get_asset(self, owner: typing.Union[str, None] = None, token_ids: typing.Union[str, None] = None, 
+    asset_contract_address: typing.Union[str, None] = None, asset_contract_addresses: typing.Union[typing.List, None] = None, 
+    order_by: typing.Union[str, None] = None, order_direction: typing.Union[str, None] = None, offset: typing.Union[str, None] = None, 
+    limit: typing.Union[str, None] = None, collection: typing.Union[str, None] = None):
+        
+        req_str = []        
+        if owner is not None: 
+            req_str.append(f"owner={owner}")
+        if token_ids is not None:
+            req_str.append(f"&token_ids={token_ids}") if len(req_str) >=0 else req_str.append(f"token_ids={token_ids}")
+        if asset_contract_address is not None:
+            req_str.append(f"&asset_contract_address={asset_contract_address}") if len(req_str) >=0 else req_str.append(f"asset_contract_address={asset_contract_address}")
+        if asset_contract_addresses is not None:
+            req_str.append(f"&asset_contract_addresses={asset_contract_addresses}") if len(req_str) >=0 else req_str.append(f"asset_contract_addresses={asset_contract_addresses}")
+        if order_by is not None:
+            req_str.append(f"&order_by={order_by}") if len(req_str) >=0 else req_str.append(f"order_by={order_by}")
+        if order_direction is not None:
+            req_str.append(f"&order_direction={order_direction}") if len(req_str) >=0 else req_str.append(f"order_direction={order_direction}")
+        if offset is not None:
+            req_str.append(f"&offset={offset}") if len(req_str) >=0 else req_str.append(f"offset={offset}")
+        if limit is not None:
+            req_str.append(f"&limit={limit}") if len(req_str) >=0 else req_str.append(f"limit={limit}")
+        if collection is not None:
+            req_str.append(f"&collection={collection}") if len(req_str) >=0 else req_str.append(f"collection={collection}")
+        
+        url_request_string = self._baseurl_assets + ''.join(req_str)
+        self._make_request(url_request_string)
+    
+
+
+    #FIXME: Need error handling etc
+    #REF: https://docs.opensea.io/reference/retrieving-asset-events
+    def get_events(self, asset_contract_address: typing.Union[str, None] = None, collection_slug: typing.Union[str, None] = None, 
+    token_id : typing.Union[str, None] = None, account_address : typing.Union[str, None] = None, event_type: typing.Union[str, None] = None, 
+    only_opensea: typing.Union[str, None] = None, auction_type: typing.Union[str, None] = None, offset: typing.Union[str, None] = None, 
+    limit: typing.Union[str, None] = None, occurred_before: typing.Union[str, None] = None, occurred_after: typing.Union[str, None] = None):
+        
+        req_str = []
+
+        if asset_contract_address is not None:
+            req_str.append(f"asset_contract_address={asset_contract_address}") 
+        if collection_slug is not None:
+            req_str.append(f"&collection_slug={collection_slug}") if len(req_str) >= 0 else req_str.append(f"collection_slug={collection_slug}")  
+        if token_id is not None:
+            req_str.append(f"&token_id={token_id}") if len(req_str) >= 0 else req_str.append(f"token_id={token_id}")  
+        if account_address is not None:
+            req_str.append(f"&account_address={account_address}") if len(req_str) >= 0 else req_str.append(f"account_address={account_address}")  
+        if event_type is not None:
+            req_str.append(f"&event_type={event_type}") if len(req_str) >= 0 else req_str.append(f"event_type={event_type}")  
+        if only_opensea is not None:
+            req_str.append(f"&only_opensea={only_opensea}") if len(req_str) >= 0 else req_str.append(f"only_opensea={only_opensea}")  
+        if auction_type is not None:
+            req_str.append(f"&auction_type={auction_type}") if len(req_str) >= 0 else req_str.append(f"auction_type={auction_type}")  
+        if offset is not None:
+            req_str.append(f"&offset={offset}") if len(req_str) >= 0 else req_str.append(f"offset={offset}")  
+        if limit is not None:
+            req_str.append(f"&limit={limit}") if len(req_str) >= 0 else req_str.append(f"limit={limit}")             
+        if occurred_before is not None:
+            req_str.append(f"&occurred_before={occurred_before}") if len(req_str) >= 0 else req_str.append(f"occurred_before={occurred_before}")             
+        if occurred_after is not None:
+            req_str.append(f"&occurred_after={occurred_after}") if len(req_str) >= 0 else req_str.append(f"occurred_after={occurred_after}")
+
+        url_request_string = self._baseurl_events + ''.join(req_str) 
+        self._make_request(url_request_string)            
+ 
+    #REF: https://docs.opensea.io/reference/retrieving-collections 
+    def get_collections(self, asset_owner: typing.Union[str, None] = None, offset: typing.Union[str, None] = None, limit: typing.Union[str, None] = None):
+        req_str = []
+
+        if asset_owner is not None:
+            req_str.append(f"asset_owner={asset_owner}")
+        if offset is not None:
+            req_str.append(f"&offset={offset}") if len(req_str) >= 0 else req_str.append(f"&offset={offset}")
+        if limit is not None:
+            req_str.append(f"&limit={limit}") if len(req_str) >= 0 else req_str.append(f"&limit={limit}")
+
+        url_request_string = self._baseurl_events + ''.join(req_str) 
+        self._make_request(url_request_string)            
+        
+
+    #TODO: write
+    def get_bundles(self, on_sale: typing.Union[str, None] = None, owner: typing.Union[str, None] = None, asset_contract_address: typing.Union[str, None] = None, 
+    token_ids: typing.Union[str, None] = None, limit: typing.Union[str, None] = None, offset: typing.Union[str, None] = None):
+        req_str = []
+        if on_sale is not None:
+            req_str.append(f"on_sale={on_sale}")
+        if owner is not None:
+            req_str.append(f"&owner={owner}") if len(req_str) >= 0 else req_str.append(f"owner={owner}") 
+        if asset_contract_address is not None:
+            req_str.append(f"&asset_contract_address={asset_contract_address}") if len(req_str) >= 0 else req_str.append(f"asset_contract_address={asset_contract_address}") 
+        if token_ids is not None:
+            req_str.append(f"&token_ids={token_ids}") if len(req_str) >= 0 else req_str.append(f"token_ids={token_ids}") 
+        if limit is not None:
+            req_str.append(f"&limit={limit}") if len(req_str) >= 0 else req_str.append(f"limit={limit}") 
+        if offset is not None:
+            req_str.append(f"&offset={offset}") if len(req_str) >= 0 else req_str.append(f"offset={offset}") 
+
+        url_request_string = self._baseurl_events + ''.join(req_str) 
+        self._make_request(url_request_string)            
+
+    def get_asset_single(self, asset_contract_address: typing.Union[str, None] = None, token_id: typing.Union[str, None] = None, account_address: typing.Union[str, None] = None):
+        req_str = []
+        
+        if asset_contract_address is not None:
+            req_str.append(f"asset_contract_address={asset_contract_address}")
+        if token_id is not None:
+            req_str.append(f"&token_id={token_id}") if len(req_str) >= 0 else req_str.append(f"token_id={token_id}")
+        if account_address is not None:
+            req_str.append(f"&account_address={account_address}") if len(req_str) >= 0 else req_str.append(f"account_address={account_address}")
+        url_request_string = self._baseurl_events + ''.join(req_str) 
+        self._make_request(url_request_string)            
+
+    # REF: https://docs.opensea.io/reference/retrieving-a-single-contract 
+    def get_contract_single(self, asset_contract_address: typing.Union[str, None] = None):
+        if asset_contract_address is not None:
+            url_request_string = self._baseurl_events + "asset_contract_address=" + asset_contract_address
+        else:
+            url_request_string = self._baseurl_events
+        self._make_request(url_request_string)            
+        
+
+    def get_collection_single(self, collection_slug):
+        if collection_slug is not None:
+            url_request_string = self._baseurl_events + "collection_slug=" + collection_slug
+        else:
+            url_request_string = self._baseurl_events
+        self._make_request(url_request_string)            
+        
+
+    #REF: https://docs.opensea.io/reference/retrieving-collection-stats 
+    def get_collection_stats(self, collection_slug):
+        if collection_slug is not None:
+            url_request_string = self._baseurl_events + "collection_slug=" + collection_slug + "/stats"
+        else:
+            url_request_string = self._baseurl_events
+        self._make_request(url_request_string)            
+        
+
 
     #FIXME: this method needs some work done. 
     def calculate_rarity(self):
@@ -55,10 +196,8 @@ class OpenSeaCollection:
                 asset_a.rarity_score += trait_a.trait_type_r_score + trait_a.value_r_score + trait_a.display_type_r_score + trait_a.max_value_r_score + trait_a._trait_count_r_score + trait_a.order_r_score
 
 
-    #TODO: Write me
-    def get_events(self, events):
-        pass
-
+    
+    
 class Asset:
     def __init__(self, data: dict):   
         self.id = data['id'] 

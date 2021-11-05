@@ -27,14 +27,19 @@ c_list = ["0xeE8C0131aa6B66A2CE3cad6D2A039c1473a79a6d", "0xB1bb22c3101E7653d0d96
 #NOTE: This is just for testing and devleopment purposes right now...
 
 if __name__ == '__main__':
-    source: typing.List[OpenSeaCollection] = []
-    for n, c in enumerate(c_list):
-        os_collection = OpenSeaCollection(c)
-        os_collection.get_assets()
-        os_collection.calculate_rarity()
-        source.append(os_collection)
-        time.sleep(1) #delay between each request 
+    c = OpenSeaCollection()
+    c.get_asset(asset_contract_address="0xeE8C0131aa6B66A2CE3cad6D2A039c1473a79a6d",limit='1')
+    for asset in c.assets:
+        print(f'{asset.id}')
     
-    for c in source:
-        for asset in c.assets:
-            print(f'{asset.id} : Rarity score: {asset.rarity_score}')
+    #source: typing.List[OpenSeaCollection] = []
+    #for n, c in enumerate(c_list):
+    #    os_collection = OpenSeaCollection(c)
+    #    os_collection.get_assets()
+    #    os_collection.calculate_rarity()
+    #    source.append(os_collection)
+    #    time.sleep(1) #delay between each request 
+    #
+    #for c in source:
+    #    for asset in c.assets:
+    #        print(f'{asset.id} : Rarity score: {asset.rarity_score}')
